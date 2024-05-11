@@ -60,6 +60,8 @@ def create_coaches_table(connection):
         CREATE TABLE IF NOT EXISTS Coaches (
             username VARCHAR(50) PRIMARY KEY,
             password VARCHAR(50),
+            name VARCHAR(50),
+            surname VARCHAR(50),
             nationality VARCHAR(50)
         )
     """)
@@ -73,6 +75,8 @@ def create_juries_table(connection):
         CREATE TABLE IF NOT EXISTS Juries (
             username VARCHAR(50) PRIMARY KEY,
             password VARCHAR(50),
+            name VARCHAR(50),
+            surname VARCHAR(50),
             nationality VARCHAR(50)
         )
     """)
@@ -96,7 +100,7 @@ def create_teams_table(connection):
     cursor = connection.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Teams (
-            team_id INT PRIMARY KEY,
+            team_id INT AUTO_INCREMENT PRIMARY KEY,
             team_name VARCHAR(50),
             coach_username VARCHAR(50),
             contract_start DATE,
@@ -138,6 +142,43 @@ def create_player_teams_table(connection):
     connection.commit()
     cursor.close()
 
+
+
+# Function to create MatchSessions table
+def create_match_sessions_table(connection):
+    cursor = connection.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS MatchSessions (
+            session_id INT AUTO_INCREMENT PRIMARY KEY,
+            team_id INT,
+            stadium_id INT,
+            time_slot INT,
+            date VARCHAR(512),
+            assigned_jury_username VARCHAR(50),
+            rating INT,
+            FOREIGN KEY (stadium_id) REFERENCES Stadiums(stadium_id),
+            FOREIGN KEY (team_id) REFERENCES Teams(team_id),
+            FOREIGN KEY (assigned_jury_username) REFERENCES Juries(username)
+        )
+    """)
+    connection.commit()
+    cursor.close()
+
+
+# Function to create Stadiums table
+def create_stadium_table(connection):
+    cursor = connection.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS Stadiums (
+            stadium_id INT PRIMARY KEY,
+            stadium_name VARCHAR(50),
+            stadium_country VARCHAR(50)
+        )
+    """)
+    connection.commit()
+    cursor.close()
+
+
 # Function to create SessionSquads table
 def create_session_squads_table(connection):
     cursor = connection.cursor()
@@ -147,35 +188,14 @@ def create_session_squads_table(connection):
             session_id INT,
             played_player_username VARCHAR(50),
             position_id INT,
-            FOREIGN KEY (session_id) REFERENCES MatchSessions(session_id),
+            FOREIGN KEY (session_id) REFERENCES MatchSessions(session_id) ON DELETE CASCADE,
             FOREIGN KEY (played_player_username) REFERENCES Players(username),
             FOREIGN KEY (position_id) REFERENCES Positions(position_id)
         )
     """)
     connection.commit()
     cursor.close()
-
-# Function to create MatchSessions table
-def create_match_sessions_table(connection):
-    cursor = connection.cursor()
-    cursor.execute("""
-        CREATE TABLE IF NOT EXISTS MatchSessions (
-            session_id INT PRIMARY KEY,
-            team_id INT,
-            stadium_id INT,
-            stadium_name VARCHAR(50),
-            stadium_country VARCHAR(50),
-            time_slot INT,
-            date DATE,
-            assigned_jury_username VARCHAR(50),
-            rating INT,
-            FOREIGN KEY (team_id) REFERENCES Teams(team_id),
-            FOREIGN KEY (assigned_jury_username) REFERENCES Juries(username)
-        )
-    """)
-    connection.commit()
-    cursor.close()
-
+    
 # Call this function to create all tables
 def create_tables():
     connection = connect_to_mysql()
@@ -188,8 +208,16 @@ def create_tables():
     create_teams_table(connection)
     create_player_positions_table(connection)
     create_player_teams_table(connection)
+    create_stadium_table(connection)
     create_match_sessions_table(connection)
     create_session_squads_table(connection)
+    # Wait for 2 seconds
+    
+    # create_data(connection)
     connection.close()
+    
+    # connection = connect_to_mysql()
+    # create_data(connection)
+    # connection.close()
 
 # Call the function to create all tables
