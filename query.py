@@ -133,43 +133,76 @@ def delete_match_session_query(session_id):
 # Also coach can choose(assign) his/her own session’s assigned
 # jury (by jury’s name and surname). The rating of the newly added session
 # should be left blank or null at first, till a jury logs in and rates the match.
-
+import traceback
 def add_match_session_query(coach_username, stadium_id, time_slot, date, jury_name, jury_surname):
     connection = connect_to_mysql()
-    cursor = connection.cursor()
     
-    team_id_query = "SELECT team_id FROM Teams WHERE coach_username = %s"
-    
-    cursor.execute(team_id_query, (coach_username,))
-    team_id = cursor.fetchone()[0]
-    print(type(team_id))
-    cursor.reset()
-    
-    
-    assigned_jury_username_query = "SELECT username FROM Juries WHERE name LIKE %s AND surname LIKE %s"
-    cursor.execute(assigned_jury_username_query, (jury_name, jury_surname))
-    assigned_jury_username = cursor.fetchone()[0]
-    print(type(assigned_jury_username))
-    print(type(stadium_id))
-    print(type(time_slot))
-    print(type(date))
-    # stadium_name, stadium_country
-    cursor.reset()
-    
-    query = """
-        INSERT INTO MatchSessions (team_id, stadium_id, time_slot, date, assigned_jury_username)
-        VALUES (%s, %s, %s, %s, %s)
-    """
     try:
-        cursor.execute(query, (team_id, stadium_id, time_slot, date, assigned_jury_username))
-    except Exception as e:
-        print("Error occurred while executing database query:", str(e))
+        with connection.cursor() as cursor:
+            team_id_query = "SELECT team_id FROM Teams WHERE coach_username = %s"
+            cursor.execute(team_id_query, (coach_username,))
+            team_id = cursor.fetchone()[0]
 
+        # Ensure any subsequent cursor is only opened after the previous one has been fully handled
+        with connection.cursor(buffered=True) as cursor:
+            assigned_jury_username_query = "SELECT username FROM Juries WHERE name LIKE %s AND surname LIKE %s"
+            cursor.execute(assigned_jury_username_query, (jury_name, jury_surname))
+            assigned_jury_username = cursor.fetchone()[0]
+            if cursor.with_rows and cursor.statement:  # Check if there are unread results
+                cursor.fetchall()  # Read all remaining data to clear the cursor
+
+        with connection.cursor() as cursor:
+            insert_query = """
+                INSERT INTO MatchSessions (team_id, stadium_id, time_slot, date, assigned_jury_username)
+                VALUES (%s, %s, %s, %s, %s)
+            """
+            cursor.execute(insert_query, (team_id, stadium_id, time_slot, date, assigned_jury_username))
+            connection.commit()
+    except Exception as e:
+        print("Error occurred while executing database query:")
+        traceback.print_exc()
+        connection.rollback()
+    finally:
+        connection.close()
+
+
+# def add_match_session_query(coach_username, stadium_id, time_slot, date, jury_name, jury_surname):
+#     connection = connect_to_mysql()
+#     cursor = connection.cursor()
+    
+#     team_id_query = "SELECT team_id FROM Teams WHERE coach_username = %s"
+    
+#     cursor.execute(team_id_query, (coach_username,))
+#     team_id = cursor.fetchone()[0]
+    
+#     cursor.reset()
     
     
-    connection.commit()
-    cursor.close()
-    connection.close()
+#     assigned_jury_username_query = "SELECT username FROM Juries WHERE name LIKE %s AND surname LIKE %s"
+#     cursor.execute(assigned_jury_username_query, (jury_name, jury_surname))
+#     assigned_jury_username = cursor.fetchone()[0]
+#     print(team_id)
+#     print(assigned_jury_username)
+#     print(stadium_id)
+#     print(time_slot)
+#     print(date)
+#     # stadium_name, stadium_country
+#     cursor.reset()
+#     with connection.cursor() as cursor:
+#         query = """
+#             INSERT INTO MatchSessions (team_id, stadium_id, time_slot, date, assigned_jury_username)
+#             VALUES (%s, %s, %s, %s, %s)
+#         """
+#         try:
+#             cursor.execute(query, (team_id, stadium_id, time_slot, date, assigned_jury_username))
+#         except Exception as e:
+#             print("Error occurred while executing database query:", str(e))
+#         connection.commit()
+    
+    
+#     connection.commit()
+#     cursor.close()
+#     connection.close()
 
 
 # REQ 6
