@@ -37,12 +37,12 @@
         const stadiums = await response.json();
 
         const list = document.getElementById('stadiumsList');
-        list.innerHTML = ''; // Clear the list before adding new items
+        list.innerHTML = ''; 
         Object.values(stadiums).forEach((stadium, index) => {
             console.log(stadium)
             const item = document.createElement('li');
             item.classList.add('stadium');
-            // Assuming stadium is a tuple-like array where index 0 is the name and index 1 is the country
+
             item.textContent = `Stadium ${index + 1}: ${stadium.name}, Location: ${stadium.country}`;
             list.appendChild(item);
         });
@@ -54,7 +54,7 @@
 
 
         function goBack() {
-            window.location.href = 'index.html'; // Navigate back to index.html
+            window.location.href = 'index.html';
         }
     </script>
 </body>

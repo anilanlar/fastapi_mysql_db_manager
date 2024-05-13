@@ -1,18 +1,5 @@
 from database import connect_to_mysql
-
-
-def add_new_user(username, password):
-    connection = connect_to_mysql()
-    cursor = connection.cursor()
-    query = """
-        INSERT INTO Users (username, password)
-        VALUES (%s, %s)
-    """
-    cursor.execute(query, (username, password))
-    connection.commit()
-    cursor.close()
-    connection.close()
-
+import traceback
 
 
 
@@ -31,7 +18,7 @@ def db_manager_login(username, password):
     cursor.close()
     connection.close()
     
-    if result[0] > 0:
+    if result[0] > 0: #Check for whether there is a match for username and password
         return True
     else:
         return False
@@ -43,25 +30,25 @@ def db_manager_login(username, password):
 def add_new_user_query(user_type, username, password, name, surname, date_of_birth, height, weight, nationality):
     connection = connect_to_mysql()
     cursor = connection.cursor()
-    userQuery = "INSERT INTO Users (username, password, name, surname) VALUES (%s, %s, %s, %s)"
+    userQuery = "INSERT INTO Users (username, password, name, surname) VALUES (%s, %s, %s, %s)" # For all type of users we need to create user
     cursor.execute(userQuery, (username, password, name, surname))
     cursor.reset()
 
-    if user_type == "Player":
+    if user_type == "Player": # Player case 
         query = """
             INSERT INTO Players (username, password, name, surname, date_of_birth, height, weight)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         cursor.execute(query, (username, password, name, surname, date_of_birth, height, weight))
 
-    elif user_type == "Jury":
+    elif user_type == "Jury": # Jury Case
         query = """
             INSERT INTO Juries (username, password, name, surname, nationality)
             VALUES (%s, %s, %s, %s, %s)
         """
         cursor.execute(query, (username, password, name, surname, nationality))
 
-    elif user_type == "Coach":
+    elif user_type == "Coach": # Coach case
         query = """
             INSERT INTO Coaches (username, password, name, surname, nationality)
             VALUES (%s, %s, %s, %s, %s)
@@ -85,7 +72,7 @@ def update_stadium_name(old_name, new_name):
     try:
         connection = connect_to_mysql()
         cursor = connection.cursor()
-        cursor.execute("SET SQL_SAFE_UPDATES = 0;")
+        cursor.execute("SET SQL_SAFE_UPDATES = 0;") # In order to make name changes there is a need to disable safe updates
         query = """
             UPDATE Stadiums
             SET stadium_name = %s
@@ -94,10 +81,10 @@ def update_stadium_name(old_name, new_name):
         cursor.execute(query, (new_name, old_name))
         rows_affected = cursor.rowcount
         connection.commit()
-        cursor.execute("SET SQL_SAFE_UPDATES = 1;")
+        cursor.execute("SET SQL_SAFE_UPDATES = 1;") # enable safe updates again
         return rows_affected > 0
     except Exception as e:
-        print("Failed to update stadium name:", e)  # Logging the error
+        print("Failed to update stadium name:", e)
         
         return False
     finally:
@@ -133,25 +120,25 @@ def delete_match_session_query(session_id):
 # Also coach can choose(assign) his/her own session’s assigned
 # jury (by jury’s name and surname). The rating of the newly added session
 # should be left blank or null at first, till a jury logs in and rates the match.
-import traceback
-def add_match_session_query(coach_username, stadium_id, time_slot, date, jury_name, jury_surname):
+
+def add_match_session_query(coach_username, stadium_id, time_slot, date, jury_name, jury_surname): 
+    #In order to prevent unread result found error we create different cursors for each operation 
     connection = connect_to_mysql()
-    
     try:
-        with connection.cursor() as cursor:
+        with connection.cursor() as cursor: #Getting team id by using coach username 
             team_id_query = "SELECT team_id FROM Teams WHERE coach_username = %s"
             cursor.execute(team_id_query, (coach_username,))
             team_id = cursor.fetchone()[0]
 
-        # Ensure any subsequent cursor is only opened after the previous one has been fully handled
-        with connection.cursor(buffered=True) as cursor:
+
+        with connection.cursor(buffered=True) as cursor: #Getting jury username by using name and surname of jury
             assigned_jury_username_query = "SELECT username FROM Juries WHERE name LIKE %s AND surname LIKE %s"
             cursor.execute(assigned_jury_username_query, (jury_name, jury_surname))
             assigned_jury_username = cursor.fetchone()[0]
-            if cursor.with_rows and cursor.statement:  # Check if there are unread results
+            if cursor.with_rows and cursor.statement:  # Still unread result error so extra prevention, Check if there are unread results
                 cursor.fetchall()  # Read all remaining data to clear the cursor
 
-        with connection.cursor() as cursor:
+        with connection.cursor() as cursor: # Inserting new session
             insert_query = """
                 INSERT INTO MatchSessions (team_id, stadium_id, time_slot, date, assigned_jury_username)
                 VALUES (%s, %s, %s, %s, %s)
@@ -165,46 +152,6 @@ def add_match_session_query(coach_username, stadium_id, time_slot, date, jury_na
     finally:
         connection.close()
 
-
-# def add_match_session_query(coach_username, stadium_id, time_slot, date, jury_name, jury_surname):
-#     connection = connect_to_mysql()
-#     cursor = connection.cursor()
-    
-#     team_id_query = "SELECT team_id FROM Teams WHERE coach_username = %s"
-    
-#     cursor.execute(team_id_query, (coach_username,))
-#     team_id = cursor.fetchone()[0]
-    
-#     cursor.reset()
-    
-    
-#     assigned_jury_username_query = "SELECT username FROM Juries WHERE name LIKE %s AND surname LIKE %s"
-#     cursor.execute(assigned_jury_username_query, (jury_name, jury_surname))
-#     assigned_jury_username = cursor.fetchone()[0]
-#     print(team_id)
-#     print(assigned_jury_username)
-#     print(stadium_id)
-#     print(time_slot)
-#     print(date)
-#     # stadium_name, stadium_country
-#     cursor.reset()
-#     with connection.cursor() as cursor:
-#         query = """
-#             INSERT INTO MatchSessions (team_id, stadium_id, time_slot, date, assigned_jury_username)
-#             VALUES (%s, %s, %s, %s, %s)
-#         """
-#         try:
-#             cursor.execute(query, (team_id, stadium_id, time_slot, date, assigned_jury_username))
-#         except Exception as e:
-#             print("Error occurred while executing database query:", str(e))
-#         connection.commit()
-    
-    
-#     connection.commit()
-#     cursor.close()
-#     connection.close()
-
-
 # REQ 6
 # Coaches shall be able to create a squad for his/her newly created session 
 # (however a new session can exist without a declared squad.). All the players 
@@ -215,7 +162,7 @@ def create_squad_query(session_id, coach_username, players):
     connection = connect_to_mysql()
     cursor = connection.cursor()
 
-    # First, ensure the session is linked to the coach's team
+    # Ensuring the session is linked to the coach's team
     team_id_query = """
         SELECT t.team_id FROM Teams t
         JOIN MatchSessions ms ON t.team_id = ms.team_id
@@ -223,29 +170,30 @@ def create_squad_query(session_id, coach_username, players):
     """
     cursor.execute(team_id_query, (session_id, coach_username))
     team_id_result = cursor.fetchone()
-    print(f"Team id : {team_id_result}")
+    # print(f"Team id : {team_id_result}")
     
-    if not team_id_result:
+    if not team_id_result: #No match case 
         cursor.close()
         connection.close()
         print("Session does not belong to the coach's team or session does not exist.")
         return False
-    print(players)
-    # Insert each player into the squad
-    for player in players:
+    # print(players)
+    
+    for player in players: # Insert each player into the new squad
         player_username = player.username
         position_id = player.position_id
-        print(f"player_username : {player_username} , position_id: {position_id}")        
+        # print(f"player_username : {player_username} , position_id: {position_id}")        
+        
         # Verify that the player is part of the coach's team
-        player_check_query = """
+        player_check_query = """ 
             SELECT username FROM PlayerTeams WHERE username = %s AND team_id = %s
         """
-        cursor.execute(player_check_query, (player_username, team_id_result[0]))
+        cursor.execute(player_check_query, (player_username, team_id_result[0])) 
         player_check = cursor.fetchone()
         print(f"player_check : {player_check}")
 
-        if not player_check:
-            continue  # Skip players not in the coach's team
+        if not player_check:#Player in different team case 
+            continue  # Skip player
 
         # Insert player into the squad
         insert_query = """
@@ -301,7 +249,7 @@ def get_jury_ratings_query(jury_username):
 # date (like the date of the Demo :) ) is after the date of the 
 # specific match session.
 
-def rate_match_query(session_id, jury_username, rating):
+def rate_match_query(session_id, jury_username, rating): # Check trigger for this query in datapase.py
     connection = connect_to_mysql()
     cursor = connection.cursor()
     try:
@@ -315,7 +263,7 @@ def rate_match_query(session_id, jury_username, rating):
             raise ValueError("Failed to update rating. Session may not exist, already be rated, or is in the future.")
         connection.commit()
     except Exception as e:
-        connection.rollback()
+        connection.rollback() #If fail discard all changes.
         print("Error occurred:", str(e))
         return False, str(e)
     finally:
@@ -335,7 +283,7 @@ def view_played_players_query(player_username):
     connection = connect_to_mysql()
     cursor = connection.cursor()
     try:
-        # Query to find all unique players played with at least once
+        #Getting all players that gave played together with given player
         cursor.execute("""
             SELECT DISTINCT p2.name, p2.surname
             FROM SessionSquads s1
@@ -345,8 +293,8 @@ def view_played_players_query(player_username):
             WHERE p1.username = %s AND p2.username != %s
         """, (player_username, player_username))
         players = cursor.fetchall()
-        cursor.reset()
-        # Query to find the player(s) with whom the given player has played the most sessions
+        cursor.reset() 
+        # Find player whom the given player has played the most sessions
         cursor.execute("""
             SELECT p2.name, p2.surname, COUNT(*) as session_count
             FROM SessionSquads s1
@@ -361,8 +309,8 @@ def view_played_players_query(player_username):
         most_frequent_player = cursor.fetchall()
         cursor.reset()
 
-        # If there are multiple players with the same max session count, calculate the average height
-        if len(most_frequent_player) > 1:
+       
+        if len(most_frequent_player) > 1: # If there are multiple players with the same max session count, calculate the average height
             names = tuple((player[0], player[1]) for player in most_frequent_player)
 
             cursor.execute("""
@@ -372,7 +320,7 @@ def view_played_players_query(player_username):
             """, (names,))
             average_height = cursor.fetchone()[0]
 
-        else:
+        else:  # Case for single or none player from query , None player from query will be handled on ui (Check req10.html)
             cursor.execute("""
                 SELECT p.height
                 FROM Players p

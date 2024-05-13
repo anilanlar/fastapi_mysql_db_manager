@@ -235,17 +235,11 @@ def create_tables():
     create_stadium_table(connection)
     create_match_sessions_table(connection)
     create_session_squads_table(connection)
-    # Wait for 2 seconds
+
     rate_match_trigger(connection)
-    # create_data(connection)
+
     connection.close()
     
-    # connection = connect_to_mysql()
-    # create_data(connection)
-    # connection.close()
-
-# Call the function to create all tables
-
 # Call the function to drop all tables
 def drop_tables():
     connection = connect_to_mysql()
@@ -254,7 +248,7 @@ def drop_tables():
     # Disable foreign key checks
     cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
 
-    # Retrieve and drop all tables
+    #  drop all tables
     cursor.execute("""
         SELECT CONCAT('DROP TABLE IF EXISTS ', table_name, ';') AS drop_statement
         FROM information_schema.tables
@@ -264,9 +258,30 @@ def drop_tables():
     for command in drop_commands:
         cursor.execute(command[0])
 
-    # Re-enable foreign key checks
+    # enable foreign key checks
     cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
 
     connection.commit()
+    cursor.close()
+    connection.close()
+    
+# Add mock data
+def add_data():
+    connection = connect_to_mysql()
+    cursor = connection.cursor()
+    
+    with open('CreateMockData.sql', 'r') as file:
+        sql_queries = file.read()
+
+    queries = sql_queries.split(';')
+    for query in queries:
+        try:
+            if query.strip() != '':
+                cursor.execute(query)
+                connection.commit()
+                print("Query executed successfully!")
+        except Exception as e:
+            print("Error executing query:", str(e))
+
     cursor.close()
     connection.close()

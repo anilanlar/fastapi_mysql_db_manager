@@ -6,7 +6,7 @@
     <title>Change Stadium Name</title>
 </head>
 <body>
-    <!-- User Input Form -->
+
     <div>
         <label for="oldName">Old Stadium Name:</label>
         <input type="text" id="oldName" name="oldName" required />
@@ -32,14 +32,14 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify(data) // Convert data into JSON
+                    body: JSON.stringify(data) 
                 });
 
                 if (!response.ok) {
                     throw new Error('Failed to update stadium name: ' + response.statusText);
                 }
 
-                const resultText = await response.text(); // Get the response text
+                const resultText = await response.text(); 
                 document.getElementById("apiResponse").innerHTML = resultText;
             } catch (error) {
                 document.getElementById("apiResponse").innerHTML = "Error: " + error.message;
@@ -47,7 +47,7 @@
         }
 
         function goBack() {
-            window.location.href = 'index.html'; // Navigate back to index.html
+            window.location.href = 'index.html'; 
         }
         
         document.getElementById("apiCallButton").addEventListener("click", callApi);

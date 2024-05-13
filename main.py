@@ -4,23 +4,24 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 
 import uvicorn
-from database import create_tables,drop_tables
+from database import create_tables,drop_tables,add_data
 from query import *
 from model import *
 
 app = FastAPI()
-app.add_middleware(
+app.add_middleware( # Adjusting CORS 
     CORSMiddleware,
-    allow_origins=["*"],  # Allow specific origins (use ["*"] for all origins)
-    allow_credentials=True,  # Allow cookies to be included in requests
-    allow_methods=["*"],     # Allow all methods (or specify like ["GET", "POST"])
-    allow_headers=["*"],     # Allow all headers (or specify like ["Content-Type"])
+    allow_origins=["*"],  
+    allow_credentials=True,  
+    allow_methods=["*"],     
+    allow_headers=["*"],    
 )
+# Test api
+# @app.post("/test-api",response_model = str)
+# def hello_api():
+#     return "Hello apppiiiii"
 
-@app.post("/test-api",response_model = str)
-def hello_api():
-    return "Hello apppiiiii"
-
+# Api for password check for login 
 @app.post("/db-manager-login/", response_model= str)
 def db_manager_login_api(db_manager: DBManager):
     try:
@@ -32,7 +33,7 @@ def db_manager_login_api(db_manager: DBManager):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+# Api for stadium name change
 @app.post("/change-stadium-name/", response_model=str)
 def change_stadium_name(dct: dict):
     try:
@@ -44,7 +45,7 @@ def change_stadium_name(dct: dict):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
+# Api for deleting match session
 @app.post("/delete-match-session/", response_model=str)
 def delete_match_session(session: DeleteSessionRequest):
 
@@ -54,7 +55,9 @@ def delete_match_session(session: DeleteSessionRequest):
         return "Match session deleted successfully >>> " + str(num_of_deleted_rows)+ " rows affected"
     else:
         return HTTPException(status_code=404, detail="Session not found")
-    
+
+
+# Api for creating squad 
 @app.post("/create-squad/", response_model=str)
 def create_squad(create_squad: CreateSquad):
     try:
@@ -63,7 +66,7 @@ def create_squad(create_squad: CreateSquad):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
     
-    
+# Api for adding new match session
 @app.post("/add-match-session/", response_model=str)
 def add_match_session(match_session: AddMatchSession):
     try:
@@ -71,23 +74,18 @@ def add_match_session(match_session: AddMatchSession):
         return "Match session added successfully"
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
-# @app.get("/get-stadiums", response_model=list)
-# def get_stadiums():
-#     try:
-#         stadiums = get_stadiums_query()
-#         return stadiums
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
+# Api for fetching stadiums
 @app.get("/get-stadiums")
 def get_stadiums():
     try:
-        stadiums = get_stadiums_query()  # Assuming this returns a list of tuples
+        stadiums = get_stadiums_query()  
         jsonResponse = {i: {'name': stadium[0], 'country': stadium[1]} for i, stadium in enumerate(stadiums)}
-        print(jsonResponse)
+        # print(jsonResponse)
         return JSONResponse(content=jsonResponse)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+    
+# Api for fetching stadiums
 @app.post("/get-jury-ratings", response_model=dict)
 def get_jury_ratings(jury: dict):
     try:
@@ -98,7 +96,7 @@ def get_jury_ratings(jury: dict):
         return jsonResponse
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
+# Api for adding new user
 @app.post("/add-new-user/", response_model=str)
 def add_new_user(user: AddUserRequest):
     try:
@@ -109,7 +107,7 @@ def add_new_user(user: AddUserRequest):
 
    
    
-   
+# Api for rating an existing session
 @app.post("/rate-session/", response_model=str)
 def rate_match(rated_session: RateSession):
     try:
@@ -118,12 +116,12 @@ def rate_match(rated_session: RateSession):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
+# Api for getting player list that have played together
 @app.post("/get-played-player/", response_model=PlayerStats)
 def get_played_player(player: PlayedPlayer):
     try:
-        players = view_played_players_query(player.username)
-        played_with = [PlayerInfo(name=p[0], surname=p[1]) for p in players['played_with']]
+        players = view_played_players_query(player.username)# 
+        played_with = [PlayerInfo(name=p[0], surname=p[1]) for p in players['played_with']] 
         most_frequent = [FrequentPlayer(name=p[0], surname=p[1], count=p[2]) for p in players['most_frequent']]
         average_height = players['average_height']
         return PlayerStats(played_with=played_with, most_frequent=most_frequent, average_height=average_height)
@@ -133,6 +131,7 @@ def get_played_player(player: PlayedPlayer):
 
 
 if __name__ == "__main__":
-    drop_tables()
-    create_tables()
-    uvicorn.run(app, host="localhost", port=8000)
+    drop_tables()# Firstly drop all tables and clear db
+    create_tables()# Create all tables
+    add_data()# Upload mock data
+    uvicorn.run(app, host="localhost", port=8000) # Start uvicorn

@@ -6,7 +6,7 @@
     <title>API Call Example</title>
   </head>
   <body>
-    <!-- User Input Form -->
+    
     <div>
       <label for="username">Username:</label>
       <input type="text" id="username" name="username" required />
@@ -21,11 +21,11 @@
     <script>
       async function callApi() {
         try {
-          // Get user input values
+
           const username = document.getElementById("username").value;
           const password = document.getElementById("password").value;
 
-          // Data to be sent in the request
+
           const dbManagerData = {
             username: username,
             password: password,
@@ -38,7 +38,7 @@
               headers: {
                 "Content-Type": "application/json",
               },
-              body: JSON.stringify(dbManagerData), // Convert data into JSON
+              body: JSON.stringify(dbManagerData), 
             }
           );
 
@@ -46,12 +46,12 @@
             throw new Error("Failed to login: " + response.statusText);
           }
 
-          const resultText = await response.text(); // Get the response text
+          const resultText = await response.text(); 
           if (response.ok) {
-            // This checks if the status code is 2xx
-            window.location.href = "index.html"; // Redirect on successful response
+
+            window.location.href = "index.html"; 
           } else {
-            const result = await response.json(); // Assuming error details are in JSON format
+            const result = await response.json(); 
             document.getElementById("apiResponse").innerHTML =
               result.detail || "Login failed";
           }
