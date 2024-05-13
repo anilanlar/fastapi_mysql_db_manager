@@ -1,16 +1,30 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 
+from fastapi.middleware.cors import CORSMiddleware
+
 import uvicorn
-from database import create_tables
+from database import create_tables,drop_tables
 from query import *
 from model import *
 
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow specific origins (use ["*"] for all origins)
+    allow_credentials=True,  # Allow cookies to be included in requests
+    allow_methods=["*"],     # Allow all methods (or specify like ["GET", "POST"])
+    allow_headers=["*"],     # Allow all headers (or specify like ["Content-Type"])
+)
+
+@app.post("/test-api",response_model = str)
+def hello_api():
+    return "Hello apppiiiii"
 
 @app.post("/db-manager-login/", response_model= str)
-def db_manager_login(db_manager: DBManager):
+def db_manager_login_api(db_manager: DBManager):
     try:
+        print(db_manager.username, db_manager.password)
         if db_manager_login(db_manager.username, db_manager.password):
             return "DB LOGIN SUCCESS"
         else:
@@ -41,6 +55,15 @@ def delete_match_session(session: DeleteSessionRequest):
     else:
         return HTTPException(status_code=404, detail="Session not found")
     
+@app.post("/create-squad/", response_model=str)
+def create_squad(create_squad: CreateSquad):
+    try:
+        create_squad_query(create_squad.session_id, create_squad.coach_username, create_squad.players)
+        return "Match session added successfully"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e)) 
+    
+    
 @app.post("/add-match-session/", response_model=str)
 def add_match_session(match_session: AddMatchSession):
     try:
@@ -48,7 +71,6 @@ def add_match_session(match_session: AddMatchSession):
         return "Match session added successfully"
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
-    
 # @app.get("/get-stadiums", response_model=list)
 # def get_stadiums():
 #     try:
@@ -59,14 +81,12 @@ def add_match_session(match_session: AddMatchSession):
 @app.get("/get-stadiums")
 def get_stadiums():
     try:
-        stadiums = get_stadiums_query()
-        jsonResponse = {}
-        for i in range(len(stadiums)):
-            jsonResponse[i] = stadiums[i]
+        stadiums = get_stadiums_query()  # Assuming this returns a list of tuples
+        jsonResponse = {i: {'name': stadium[0], 'country': stadium[1]} for i, stadium in enumerate(stadiums)}
+        print(jsonResponse)
         return JSONResponse(content=jsonResponse)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 @app.post("/get-jury-ratings", response_model=dict)
 def get_jury_ratings(jury: dict):
@@ -78,6 +98,7 @@ def get_jury_ratings(jury: dict):
         return jsonResponse
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
 @app.post("/add-new-user/", response_model=str)
 def add_new_user(user: AddUserRequest):
     try:
@@ -86,9 +107,32 @@ def add_new_user(user: AddUserRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-    
+   
+   
+   
+@app.post("/rate-session/", response_model=str)
+def rate_match(rated_session: RateSession):
+    try:
+        rate_match_query(rated_session.session_id, rated_session.jury_username, rated_session.rating)
+        return "match rated successfully"
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/get-played-player/", response_model=PlayerStats)
+def get_played_player(player: PlayedPlayer):
+    try:
+        players = view_played_players_query(player.username)
+        played_with = [PlayerInfo(name=p[0], surname=p[1]) for p in players['played_with']]
+        most_frequent = [FrequentPlayer(name=p[0], surname=p[1], count=p[2]) for p in players['most_frequent']]
+        average_height = players['average_height']
+        return PlayerStats(played_with=played_with, most_frequent=most_frequent, average_height=average_height)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 if __name__ == "__main__":
+    drop_tables()
     create_tables()
     uvicorn.run(app, host="localhost", port=8000)

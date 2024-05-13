@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>REQ Navigation</title>
+    <style>
+        button {
+            margin: 5px;
+            padding: 10px;
+            width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Select a Requirement</h1>
+    <div>
+        <button onclick="navigate('req2.html')">Add New User - Req2</button>
+        <button onclick="navigate('req3.html')">Update Stadium Name - Req3</button>
+        <button onclick="navigate('req4.html')">Delete Session - Req4</button>
+        <button onclick="navigate('req5.html')">Add Match Session - Req5</button>
+        <button onclick="navigate('req6.html')">Create Squad - Req6</button>
+        <button onclick="navigate('req7.html')">Get Stadiums - Req7</button>
+        <button onclick="navigate('req8.html')">Get Rating - Req8</button>
+        <button onclick="navigate('req9.html')">Rate Session - Req9</button>
+        <button onclick="navigate('req10.html')">View Played Players - Req10</button>
+    </div>
+
+    <script>
+        function navigate(url) {
+            window.location.href = url; // Redirect to the URL passed to the function
+        }
+    </script>
+</body>
+</html>

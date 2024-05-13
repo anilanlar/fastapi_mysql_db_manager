@@ -5,7 +5,7 @@ def connect_to_mysql():
     return mysql.connector.connect(
     host="localhost",
     user="root",
-    password="anil",
+    password="Alb761834925:",
     database="VolleyDB"
 )
 
@@ -195,7 +195,31 @@ def create_session_squads_table(connection):
     """)
     connection.commit()
     cursor.close()
-    
+
+
+
+#Trigger for REQ 9 rating
+def rate_match_trigger(connection):
+    cursor = connection.cursor()
+    cursor.execute("""
+        CREATE TRIGGER BeforeUpdateRating
+        BEFORE UPDATE ON MatchSessions
+        FOR EACH ROW
+        BEGIN
+            IF OLD.rating IS NULL AND NEW.rating IS NOT NULL THEN
+                IF CURDATE() > OLD.date THEN
+                    SET NEW.rating = NEW.rating;
+                ELSE
+                    SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cannot rate a future session.';
+                END IF;
+            ELSEIF OLD.rating IS NOT NULL THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Session already rated.';
+            END IF;
+        END;
+    """)
+    connection.commit()
+    cursor.close()
+
 # Call this function to create all tables
 def create_tables():
     connection = connect_to_mysql()
@@ -212,7 +236,7 @@ def create_tables():
     create_match_sessions_table(connection)
     create_session_squads_table(connection)
     # Wait for 2 seconds
-    
+    rate_match_trigger(connection)
     # create_data(connection)
     connection.close()
     
@@ -221,3 +245,28 @@ def create_tables():
     # connection.close()
 
 # Call the function to create all tables
+
+# Call the function to drop all tables
+def drop_tables():
+    connection = connect_to_mysql()
+    cursor = connection.cursor()
+
+    # Disable foreign key checks
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 0;")
+
+    # Retrieve and drop all tables
+    cursor.execute("""
+        SELECT CONCAT('DROP TABLE IF EXISTS ', table_name, ';') AS drop_statement
+        FROM information_schema.tables
+        WHERE table_schema = 'VolleyDB';
+    """)
+    drop_commands = cursor.fetchall()
+    for command in drop_commands:
+        cursor.execute(command[0])
+
+    # Re-enable foreign key checks
+    cursor.execute("SET FOREIGN_KEY_CHECKS = 1;")
+
+    connection.commit()
+    cursor.close()
+    connection.close()

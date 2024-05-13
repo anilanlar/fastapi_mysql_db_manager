@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Squad</title>
+    <style>
+        .player-inputs { margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <!-- User Input Form -->
+    <div>
+        <label for="sessionId">Session ID:</label>
+        <input type="number" id="sessionId" name="sessionId" required />
+    </div>
+    <div>
+        <label for="coachUsername">Coach Username:</label>
+        <input type="text" id="coachUsername" name="coachUsername" required />
+    </div>
+    <div id="playersContainer">
+        <label>Players:</label>
+        <div class="player-inputs">
+            <input type="text" placeholder="Username" class="playerUsername" required />
+            <input type="number" placeholder="Position ID" class="playerPositionId" required />
+        </div>
+    </div>
+    <button onclick="addPlayer()">Add Another Player</button>
+    <button id="apiCallButton">Create Squad</button>
+    <button onclick="goBack()">Back to Home</button>
+    <div id="apiResponse">Response will appear here...</div>
+
+    <script>
+        function addPlayer() {
+            const container = document.getElementById('playersContainer');
+            const newInput = document.createElement('div');
+            newInput.classList.add('player-inputs');
+            newInput.innerHTML = `
+                <input type="text" placeholder="Username" class="playerUsername" required />
+                <input type="number" placeholder="Position ID" class="playerPositionId" required />
+            `;
+            container.appendChild(newInput);
+        }
+
+        async function callApi() {
+            const playerUsernames = document.querySelectorAll('.playerUsername');
+            const playerPositionIds = document.querySelectorAll('.playerPositionId');
+            let players = [];
+            playerUsernames.forEach((input, index) => {
+                players.push({
+                    username: input.value,
+                    position_id: parseInt(playerPositionIds[index].value)
+                });
+            });
+
+            const data = {
+                session_id: parseInt(document.getElementById("sessionId").value),
+                coach_username: document.getElementById("coachUsername").value,
+                players: players
+            };
+
+            try {
+                const response = await fetch('http://localhost:8000/create-squad/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to create squad: ' + response.statusText);
+                }
+
+                const resultText = await response.text();
+                document.getElementById("apiResponse").innerHTML = resultText;
+            } catch (error) {
+                document.getElementById("apiResponse").innerHTML = "Error: " + error.message;
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        document.getElementById("apiCallButton").addEventListener("click", callApi);
+    </script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Stadiums</title>
+    <style>
+        #stadiumsList {
+            margin-top: 20px;
+            list-style-type: none;
+        }
+        .stadium {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Stadiums</h1>
+    <ul id="stadiumsList"></ul>
+    <button onclick="goBack()">Back to Home</button>
+    <div id="apiResponse">Response will appear here...</div>
+
+    <script>
+        window.onload = function() {
+            fetchStadiums();
+        };
+
+        async function fetchStadiums() {
+    try {
+        const response = await fetch('http://localhost:8000/get-stadiums');
+        if (!response.ok) {
+            throw new Error('Failed to fetch stadiums: ' + response.statusText);
+        }
+        const stadiums = await response.json();
+
+        const list = document.getElementById('stadiumsList');
+        list.innerHTML = ''; // Clear the list before adding new items
+        Object.values(stadiums).forEach((stadium, index) => {
+            console.log(stadium)
+            const item = document.createElement('li');
+            item.classList.add('stadium');
+            // Assuming stadium is a tuple-like array where index 0 is the name and index 1 is the country
+            item.textContent = `Stadium ${index + 1}: ${stadium.name}, Location: ${stadium.country}`;
+            list.appendChild(item);
+        });
+    } catch (error) {
+        document.getElementById('apiResponse').innerHTML = 'Error: ' + error.message;
+    }
+}
+
+
+
+        function goBack() {
+            window.location.href = 'index.html'; // Navigate back to index.html
+        }
+    </script>
+</body>
+</html>

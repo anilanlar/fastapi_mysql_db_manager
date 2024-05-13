@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Change Stadium Name</title>
+</head>
+<body>
+    <!-- User Input Form -->
+    <div>
+        <label for="oldName">Old Stadium Name:</label>
+        <input type="text" id="oldName" name="oldName" required />
+    </div>
+    <div>
+        <label for="newName">New Stadium Name:</label>
+        <input type="text" id="newName" name="newName" required />
+    </div>
+    <button id="apiCallButton">Change Stadium Name</button>
+    <button onclick="goBack()">Back to Home</button>
+    <div id="apiResponse">Response will appear here...</div>
+
+    <script>
+        async function callApi() {
+            try {
+                const data = {
+                    old_name: document.getElementById("oldName").value,
+                    new_name: document.getElementById("newName").value,
+                };
+
+                const response = await fetch('http://localhost:8000/change-stadium-name/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data) // Convert data into JSON
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update stadium name: ' + response.statusText);
+                }
+
+                const resultText = await response.text(); // Get the response text
+                document.getElementById("apiResponse").innerHTML = resultText;
+            } catch (error) {
+                document.getElementById("apiResponse").innerHTML = "Error: " + error.message;
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'index.html'; // Navigate back to index.html
+        }
+        
+        document.getElementById("apiCallButton").addEventListener("click", callApi);
+    </script>
+</body>
+</html>

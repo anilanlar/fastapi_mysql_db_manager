@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>View Jury Ratings</title>
+    <style>
+        #ratingsList, #stadiumsList {
+            margin-top: 20px;
+            list-style-type: none;
+        }
+        .stadium, .rating {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    
+
+    <h2>Jury Ratings</h2>
+    <div>
+        <label for="juryUsername">Jury Username:</label>
+        <input type="text" id="juryUsername" required />
+        <button onclick="fetchJuryRatings()">Get Ratings</button>
+    </div>
+    <div id="juryResponse">Ratings will appear here...</div>
+
+    <button onclick="goBack()">Back to Home</button>
+    <div id="apiResponse">Response will appear here...</div>
+
+    <script>
+        
+
+        
+
+        async function fetchJuryRatings() {
+            const juryUsername = document.getElementById('juryUsername').value;
+            try {
+                const response = await fetch('http://localhost:8000/get-jury-ratings', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ jury_username: juryUsername })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch jury ratings: ' + response.statusText);
+                }
+                const ratings = await response.json();
+
+                const ratingInfo = `Average Rating: ${ratings.average}, Count: ${ratings.count}`;
+                document.getElementById('juryResponse').innerHTML = ratingInfo;
+            } catch (error) {
+                document.getElementById('juryResponse').innerHTML = 'Error: ' + error.message;
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'index.html'; // Navigate back to index.html
+        }
+    </script>
+</body>
+</html>

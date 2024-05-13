@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  </head>
+  <body>
+    <div id="rateSessionForm">
+      <h2>Rate a Session</h2>
+      <input type="text" id="session_id" placeholder="Session ID" />
+      <input type="text" id="jury_username" placeholder="Jury Username" />
+      <input type="number" id="rating" placeholder="Rating" min="1" max="5" />
+      <button onclick="rateSession()">Rate</button>
+    </div>
+    <button onclick="goBack()">Back to Home</button>
+    <div id="apiResponse">Response will appear here...</div>
+
+    <!-- Form to rate a session -->
+
+    <script>
+      async function rateSession() {
+        const sessionId = document.getElementById("session_id").value;
+        const juryUsername = document.getElementById("jury_username").value;
+        const rating = document.getElementById("rating").value;
+
+        const response = await fetch("http://localhost:8000/rate-session/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            jury_username: juryUsername,
+            rating: rating,
+          }),
+        });
+
+        if (response.ok) {
+          document.getElementById("apiResponse").innerHTML =
+            "Session rated successfully";
+        } else {
+          const error = await response.text();
+          document.getElementById("apiResponse").innerHTML =
+            "Error rating session: " + error;
+        }
+      }
+
+      function goBack() {
+        window.location.href = "index.html"; // Navigate back to index.html
+      }
+    </script>
+  </body>
+</html>

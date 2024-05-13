@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Add New User</title>
+  </head>
+  <body>
+    <!-- User Input Form -->
+    <div>
+      <label for="userType">User Type:</label>
+      <input type="text" id="userType" name="userType" required />
+    </div>
+    <div>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required />
+    </div>
+    <div>
+      <label for="password">Password:</label>
+      <input type="password" id="password" name="password" required />
+    </div>
+    <div>
+      <label for="name">Name:</label>
+      <input type="text" id="name" name="name" required />
+    </div>
+    <div>
+      <label for="surname">Surname:</label>
+      <input type="text" id="surname" name="surname" required />
+    </div>
+    <div>
+      <label for="dateOfBirth">Date of Birth:</label>
+      <input type="date" id="dateOfBirth" name="dateOfBirth" required />
+    </div>
+    <div>
+      <label for="height">Height:</label>
+      <input type="number" id="height" name="height" required />
+    </div>
+    <div>
+      <label for="weight">Weight:</label>
+      <input type="number" id="weight" name="weight" required />
+    </div>
+    <div>
+      <label for="nationality">Nationality:</label>
+      <input type="text" id="nationality" name="nationality" required />
+    </div>
+    <button id="apiCallButton">Add User</button>
+    <button onclick="goBack()">Back to Home</button>
+    <div id="apiResponse">Response will appear here...</div>
+
+    <script>
+      async function callApi() {
+        try {
+          const data = {
+            user_type: document.getElementById("userType").value,
+            username: document.getElementById("username").value,
+            password: document.getElementById("password").value,
+            name: document.getElementById("name").value,
+            surname: document.getElementById("surname").value,
+            date_of_birth: document.getElementById("dateOfBirth").value,
+            height: parseFloat(document.getElementById("height").value),
+            weight: parseFloat(document.getElementById("weight").value),
+            nationality: document.getElementById("nationality").value,
+          };
+
+          const response = await fetch('http://localhost:8000/add-new-user/', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data) // Convert data into JSON
+          });
+
+          const resultText = await response.text(); // Get the response text
+          document.getElementById("apiResponse").innerHTML = resultText;
+        } catch (error) {
+          document.getElementById("apiResponse").innerHTML = "Error: " + error.message;
+        }
+      }
+      function goBack() {
+            window.location.href = 'index.html'; // Navigate back to index.html
+        }
+      document.getElementById("apiCallButton").addEventListener("click", callApi);
+    </script>
+  </body>
+</html>

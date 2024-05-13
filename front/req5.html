@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Match Session</title>
+</head>
+<body>
+    <!-- User Input Form -->
+    <div>
+        <label for="coachUsername">Coach Username:</label>
+        <input type="text" id="coachUsername" name="coachUsername" required />
+    </div>
+    <div>
+        <label for="stadiumId">Stadium ID:</label>
+        <input type="number" id="stadiumId" name="stadiumId" required />
+    </div>
+    <div>
+        <label for="timeSlot">Time Slot:</label>
+        <input type="number" id="timeSlot" name="timeSlot" required />
+    </div>
+    <div>
+        <label for="date">Date:</label>
+        <input type="date" id="date" name="date" required />
+    </div>
+    <div>
+        <label for="juryName">Jury Name:</label>
+        <input type="text" id="juryName" name="juryName" required />
+    </div>
+    <div>
+        <label for="jurySurname">Jury Surname:</label>
+        <input type="text" id="jurySurname" name="jurySurname" required />
+    </div>
+    <button id="apiCallButton">Add Match Session</button>
+    <button onclick="goBack()">Back to Home</button>
+    <div id="apiResponse">Response will appear here...</div>
+
+    <script>
+        async function callApi() {
+            try {
+                const data = {
+                    coach_username: document.getElementById("coachUsername").value,
+                    stadium_id: parseInt(document.getElementById("stadiumId").value),
+                    time_slot: parseInt(document.getElementById("timeSlot").value),
+                    date: document.getElementById("date").value,
+                    jury_name: document.getElementById("juryName").value,
+                    jury_surname: document.getElementById("jurySurname").value,
+                };
+
+                const response = await fetch('http://localhost:8000/add-match-session/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to add match session: ' + response.statusText);
+                }
+
+                const resultText = await response.text();
+                document.getElementById("apiResponse").innerHTML = resultText;
+            } catch (error) {
+                document.getElementById("apiResponse").innerHTML = "Error: " + error.message;
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'index.html'; // Navigate back to index.html
+        }
+
+        document.getElementById("apiCallButton").addEventListener("click", callApi);
+    </script>
+</body>
+</html>
