@@ -100,7 +100,7 @@ def create_teams_table(connection):
     cursor = connection.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS Teams (
-            team_id INT AUTO_INCREMENT PRIMARY KEY,
+            team_id INT PRIMARY KEY,
             team_name VARCHAR(50),
             coach_username VARCHAR(50),
             contract_start DATE,
@@ -149,7 +149,7 @@ def create_match_sessions_table(connection):
     cursor = connection.cursor()
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS MatchSessions (
-            session_id INT AUTO_INCREMENT PRIMARY KEY,
+            session_id INT PRIMARY KEY,
             team_id INT,
             stadium_id INT,
             time_slot INT,
@@ -270,7 +270,7 @@ def add_data():
     connection = connect_to_mysql()
     cursor = connection.cursor()
     
-    with open('CreateMockData.sql', 'r') as file:
+    with open('DemoData.sql', 'r') as file:
         sql_queries = file.read()
 
     queries = sql_queries.split(';')
